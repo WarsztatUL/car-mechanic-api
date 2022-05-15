@@ -89,4 +89,22 @@ public class CustomerController {
         customerService.setCustomer(customerRequest);
         return ResponseEntity.ok().build();
     }
+
+
+    @RequestMapping(
+            method = RequestMethod.PATCH,
+            value = "/customer/{customerId}/vehicle/{vehicleId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ApiOperation(value = "Add Vehicle to Customer",
+            notes = "Bind vehicle by id with customer")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 400, message = "Bad Request", response = ApiErrorResponse.class),
+            @ApiResponse(code = 404, message = "Not found", response = ApiErrorResponse.class),
+            @ApiResponse(code = 500, message = "Internal server error", response = ApiErrorResponse.class)})
+    public ResponseEntity<Void> addVehicleToCustomer(@PathVariable final Long customerId, @PathVariable final Long vehicleId) {
+        log.info("PUT /customer/{}/vehicle/{}", customerId, vehicleId);
+        customerService.addVehicleToCustomer(customerId, vehicleId);
+        return ResponseEntity.ok().build();
+    }
 }

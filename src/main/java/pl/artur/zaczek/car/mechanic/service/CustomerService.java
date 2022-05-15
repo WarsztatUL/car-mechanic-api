@@ -11,4 +11,5 @@ public interface CustomerService {
     Long createCustomer(CreateCustomer customerRequest);
     CustomerResponse getCustomerById(Long id);
     void setCustomer(SetCustomer customerRequest);
+    void addVehicleToCustomer(Long customerId, Long vehicleId);
 }

@@ -269,4 +269,23 @@ class ServiceRequestServiceImplTest {
         //then
         assertDoesNotThrow(() -> serviceRequestService.setSR(request));
     }
+
+    @Test
+    @DisplayName("should throw NotFoundException when SR is not found")
+    public void shouldThrowNotFoundExceptionWhenSRIsNotFoundOnDB() {
+        //given
+        final SetServiceRequest request = SetServiceRequest.builder()
+                .id(1L)
+                .comment("test")
+                .isDone(false)
+                .title("Test")
+                .build();
+        //when
+        Mockito.when(serviceRequestRepository.findById(Mockito.anyLong())).thenReturn(Optional.empty());
+        //then
+        final NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> serviceRequestService.setSR(request));
+        assertEquals("Service request id: 1 not found", exception.getMessage());
+        assertEquals("NOT_FOUND", exception.getCode());
+    }
 }

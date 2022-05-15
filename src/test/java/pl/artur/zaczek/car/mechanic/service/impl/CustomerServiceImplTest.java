@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import pl.artur.zaczek.car.mechanic.jpa.AddressRepository;
 import pl.artur.zaczek.car.mechanic.jpa.CustomerRepository;
+import pl.artur.zaczek.car.mechanic.jpa.VehicleRepository;
 import pl.artur.zaczek.car.mechanic.model.Customer;
 import pl.artur.zaczek.car.mechanic.model.ServiceRequest;
 import pl.artur.zaczek.car.mechanic.model.Vehicle;
@@ -27,10 +28,7 @@ import pl.artur.zaczek.car.mechanic.rest.model.SetCustomer;
 import pl.artur.zaczek.car.mechanic.utils.CustomerMapper;
 import pl.artur.zaczek.car.mechanic.utils.ModelValidator;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,11 +48,14 @@ class CustomerServiceImplTest {
     @Mock
     AddressRepository addressRepository;
 
+    @Mock
+    VehicleRepository vehicleRepository;
+
     CustomerServiceImpl customerService;
 
     @BeforeEach
     void setUp() {
-        customerService = new CustomerServiceImpl(customerRepository, addressRepository, customerMapper, modelValidator);
+        customerService = new CustomerServiceImpl(customerRepository, addressRepository, vehicleRepository, customerMapper, modelValidator);
     }
 
     /***********  get customer  ***********/
@@ -218,6 +219,7 @@ class CustomerServiceImplTest {
     }
 
     /***********  set customer  ***********/
+
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {"  ", "\t", "\n"})
@@ -272,6 +274,47 @@ class CustomerServiceImplTest {
         Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(Customer.builder().id(1L).build()));
         Mockito.when(customerRepository.save(Mockito.any())).thenReturn(Customer.builder().id(1L).build());
         //then
-        assertDoesNotThrow(()->customerService.setCustomer(customer));
+        assertDoesNotThrow(() -> customerService.setCustomer(customer));
+    }
+
+    @Test
+    @DisplayName("should throw NotFoundException when customer not found in set customer")
+    public void shouldThrowNotFoundExceptionWhenCustomerNotFoundInSetCustomer() {
+        Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+        final NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> customerService.setCustomer(SetCustomer.builder().id(1L).build()));
+        assertEquals("Customer with id: 1 not found", exception.getMessage());
+        assertEquals("NOT_FOUND", exception.getCode());
+    }
+
+    /***********  add vehicle to customer  ***********/
+
+    @Test
+    @DisplayName("should throw NotFoundException when customer not found in add vehicle")
+    public void shouldThrowNotFoundExceptionWhenCustomerNotFoundInAddVehicle() {
+        Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.empty());
+        final NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> customerService.addVehicleToCustomer(1L, 1L));
+        assertEquals("Customer with id: 1 not found", exception.getMessage());
+        assertEquals("NOT_FOUND", exception.getCode());
+    }
+
+    @Test
+    @DisplayName("should throw NotFoundException when vehicle not found in add vehicle")
+    public void shouldThrowNotFoundExceptionWhenVehicleNotFoundInAddVehicle() {
+        Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(Customer.builder().build()));
+        Mockito.when(vehicleRepository.findById(1L)).thenReturn(Optional.empty());
+        final NotFoundException exception = assertThrows(NotFoundException.class,
+                () -> customerService.addVehicleToCustomer(1L, 1L));
+        assertEquals("Vehicle with id: 1 not found", exception.getMessage());
+        assertEquals("NOT_FOUND", exception.getCode());
+    }
+
+    @Test
+    @DisplayName("should add Vehicle to Customer")
+    public void shouldAddVehicleToCustomer() {
+        Mockito.when(customerRepository.findById(1L)).thenReturn(Optional.of(Customer.builder().vehicleSet(new HashSet<>()).build()));
+        Mockito.when(vehicleRepository.findById(1L)).thenReturn(Optional.of(Vehicle.builder().customers(new HashSet<>()).build()));
+        assertDoesNotThrow(() -> customerService.addVehicleToCustomer(1L, 1L));
     }
 }

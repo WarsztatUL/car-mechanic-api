@@ -17,9 +17,9 @@ public class SwaggerConfig {
     ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 .title("Car Mechanic DB")
-                .description("rest api for car mechanic backend application")
-                .license("Apache 2.0")
-                .licenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html")
+                .description("Rest API for car mechanic backend application")
+                .license("GNU General Public License v3.0")
+                .licenseUrl("https://github.com/WarsztatUL/car-mechanic-api/blob/master/LICENSE")
                 .termsOfServiceUrl("")
                 .version("0.0.3")
                 .contact(new Contact("", "", "Warsztatul.22@gmail.com"))
