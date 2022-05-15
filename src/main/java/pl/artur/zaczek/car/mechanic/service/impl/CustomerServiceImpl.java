@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.artur.zaczek.car.mechanic.jpa.AddressRepository;
 import pl.artur.zaczek.car.mechanic.jpa.CustomerRepository;
+import pl.artur.zaczek.car.mechanic.jpa.VehicleRepository;
 import pl.artur.zaczek.car.mechanic.model.Customer;
+import pl.artur.zaczek.car.mechanic.model.Vehicle;
 import pl.artur.zaczek.car.mechanic.rest.error.NotFoundException;
 import pl.artur.zaczek.car.mechanic.rest.model.CreateCustomer;
 import pl.artur.zaczek.car.mechanic.rest.model.CustomerResponse;
@@ -27,6 +29,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
     private final AddressRepository addressRepository;
+    private final VehicleRepository vehicleRepository;
     private final CustomerMapper customerMapper;
     private final ModelValidator modelValidator;
 
@@ -54,7 +57,7 @@ public class CustomerServiceImpl implements CustomerService {
         return customerRepository.findById(customerId)
                 .map(customerMapper::customerToResponse)
                 .orElseThrow(() -> {
-                    log.error("Customer not found for user id:{}", customerId);
+                    log.error("Customer not found with id:{}", customerId);
                     throw new NotFoundException("Customer with id: " + customerId + " not found", HttpStatus.NOT_FOUND.name());
                 });
     }
@@ -66,10 +69,10 @@ public class CustomerServiceImpl implements CustomerService {
         long customerId = customerRequest.getId();
         final Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> {
-                    log.error("Customer not found for user id:{}", customerId);
+                    log.error("Customer not found with id:{}", customerId);
                     throw new NotFoundException("Customer with id: " + customerId + " not found", HttpStatus.NOT_FOUND.name());
                 });
-        if(customerRequest.getAddress() != null){
+        if (customerRequest.getAddress() != null) {
             customer.setAddress(customerMapper.addressDTOToAddress(customerRequest.getAddress()));
         }
         customer.setCompany(customerRequest.isCompany());
@@ -81,5 +84,24 @@ public class CustomerServiceImpl implements CustomerService {
         customer.setPhoneNo(customerRequest.getPhoneNo());
         customer.setSecondPhoneNo(customerRequest.getSecondPhoneNo());
         customerRepository.save(customer);
+    }
+
+    @Override
+    @Transactional
+    public void addVehicleToCustomer(final Long customerId, final Long vehicleId) {
+        final Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> {
+                    log.error("Customer not found with id:{}", customerId);
+                    throw new NotFoundException("Customer with id: " + customerId + " not found", HttpStatus.NOT_FOUND.name());
+                });
+        final Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> {
+                    log.error("Vehicle not found with id:{}", vehicleId);
+                    throw new NotFoundException("Vehicle with id: " + vehicleId + " not found", HttpStatus.NOT_FOUND.name());
+                });
+        vehicle.getCustomers().add(customer);
+        customer.getVehicleSet().add(vehicle);
+        customerRepository.save(customer);
+        vehicleRepository.save(vehicle);
     }
 }
